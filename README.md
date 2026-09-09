@@ -1,271 +1,1412 @@
-# 🚀 Job Portal Management System
+# 🚀 NicheNest — Job Portal with Automation
 
-A RESTful Job Portal Management System built using **Spring Boot**, **Spring Data JPA**, **Hibernate**, and **MySQL**. This project allows companies to manage job postings through REST APIs.
+NicheNest is a full-stack **Job Portal with Automation** designed to connect job seekers and employers on a single platform.
 
-## 📌 Features
+The platform allows job seekers to discover, search, filter, and apply for jobs, while employers can post jobs and manage the applications they receive.
 
-* Manage Company details
-* Post new Job Openings
-* Search Companies by Industry & Location
-* Search Jobs by Location
-* Delete Jobs based on Company & Job Type
-* Update Job Salary
-* Search Jobs by Industry & Minimum Salary
-* Update Job Status (AVAILABLE / UNAVAILABLE)
-* Delete Company Details
+The project also includes:
+- Automated job-matching email notifications based on job niches and user preferences
+- JWT-based authentication and role-based authorization
+- Resume upload and storage using Cloudinary
+- An AI-powered job chatbot
+- A dedicated registration-email service
+- A Node.js API Gateway between the frontend and backend services
 
 ---
 
-# 🛠️ Tech Stack
+## 📌 Problem Statement
 
-* Java 17+ (Compatible with Java 24)
-* Spring Boot
-* Spring Data JPA
-* Hibernate ORM
-* MySQL
-* Lombok
-* ModelMapper
-* Maven
-* Postman (API Testing)
+Traditional job portals require job seekers to repeatedly search for suitable jobs. Employers also need a convenient way to publish jobs and manage candidate applications.
 
----
+This project provides a centralized platform where:
 
-# 📂 Project Structure
-
-```
-src
-├── main
-│   ├── java
-│   │   └── com.backend
-│   │       ├── controller
-│   │       ├── service
-│   │       ├── repository
-│   │       ├── entites
-│   │       ├── dtos
-│   │       ├── custom_exception
-│   │       ├── config
-│   │       └── Application.java
-│   └── resources
-│       └── application.properties
-```
+- **Job seekers** can find and apply for suitable jobs.
+- **Employers** can publish jobs and manage applications.
+- The system can automatically identify users whose selected niches match newly posted jobs.
+- Matching job seekers receive an automated email notification.
+- An AI chatbot helps users with job, resume, interview, career, and placement-related questions.
 
 ---
 
-# 🗄️ Database Design
+# ✨ Key Features
 
-## Company
+## 👨‍💼 Job Seeker Features
 
-| Column    | Type      |
-| --------- | --------- |
-| id        | Long      |
-| name      | String    |
-| email     | String    |
-| location  | String    |
-| industry  | Enum      |
-| createdOn | LocalDate |
-
----
-
-## Job
-
-| Column      | Type        |
-| ----------- | ----------- |
-| id          | Long        |
-| title       | String      |
-| description | String      |
-| salary      | Double      |
-| location    | String      |
-| jobType     | Enum        |
-| postedDate  | LocalDate   |
-| status      | Enum        |
-| company     | Many-to-One |
+- User registration and login
+- JWT-based authentication
+- Job seeker role-based access
+- Select job niches/preferences during registration
+- Resume upload
+- Resume storage through Cloudinary
+- Search jobs
+- Filter jobs by:
+  - City/location
+  - Job niche
+  - Search keyword
+- View individual job details
+- Apply for a job
+- Upload a resume while applying
+- Use an existing resume when applying
+- Prevent duplicate applications
+- View submitted applications
+- Delete own applications
+- Update profile
+- Change password
+- Receive automated matching-job email notifications
+- Use the AI job chatbot
 
 ---
 
-# 🔗 Entity Relationship
+## 🏢 Employer Features
 
-```
-Company (1)
-      │
-      │
-      │
-      ▼
-Job (Many)
-```
-
----
-
-# 📌 REST APIs
-
-## Company APIs
-
-### 1. Get Companies by Industry & Location
-
-```
-GET /companies/{industry}/{location}
-```
+- Employer registration and login
+- JWT-based authentication
+- Employer role-based access
+- Post jobs
+- View own posted jobs
+- Delete own posted jobs
+- View applications received for their jobs
+- Manage/hide received applications
+- Manage profile information
 
 ---
 
-### 2. Delete Company
+## 🤖 AI Chatbot
 
-```
-DELETE /companies/{companyId}
-```
+The project contains a separate Python FastAPI chatbot service.
 
----
+The chatbot:
 
-## Job APIs
+- Provides job-related assistance
+- Fetches current jobs from the Spring Boot backend
+- Uses Groq's LLM API
+- Uses the `llama-3.3-70b-versatile` model in the current implementation
+- Can answer questions about:
+  - Jobs
+  - Resume
+  - Interviews
+  - Career guidance
+  - Placement preparation
 
-### 1. Post New Job
-
-```
-POST /jobs
-```
-
-Request Body
-
-```json
-{
-    "companyId":1,
-    "title":"Java Developer",
-    "description":"Spring Boot Developer",
-    "salary":900000,
-    "location":"Pune",
-    "jobType":"FULL_TIME"
-}
-```
+For job-related questions, the chatbot is instructed to use the available job data.
 
 ---
 
-### 2. Get Jobs by Location
+## 📧 Automated Job Notification
 
+One of the main automation features is automatic job notification.
+
+### Flow
+
+```text
+Employer posts a job
+        ↓
+Job is saved in MySQL
+        ↓
+Scheduled automation checks new jobs
+        ↓
+Job niche is identified
+        ↓
+Users with matching niches are found
+        ↓
+Email notification is sent
+        ↓
+Job is marked as newsletter sent
 ```
-GET /jobs/location/{location}
-```
+
+The Spring Boot application contains a `NewsletterScheduler` that runs on a scheduled cron and processes jobs whose newsletter has not yet been sent.
+
+Users are matched using their selected niches.
 
 ---
 
-### 3. Delete Jobs by Company & Job Type
+# 🏗️ System Architecture
 
-```
-DELETE /jobs/{companyName}/{jobType}
-```
-
----
-
-### 4. Update Job Salary
-
-```
-PUT /jobs/{companyId}/{title}
-```
-
-Request Body
-
-```json
-{
-    "salary":1200000
-}
+```text
+                         ┌─────────────────────┐
+                         │   React Frontend    │
+                         │   Vite + Redux      │
+                         └──────────┬──────────┘
+                                    │
+                                    │ HTTP / HTTPS
+                                    ▼
+                         ┌─────────────────────┐
+                         │   Node.js Gateway   │
+                         │      Express        │
+                         └───────┬───────┬─────┘
+                                 │       │
+                  JSON / Upload  │       │ Chat
+                                 │       │
+                                 ▼       ▼
+                    ┌────────────────┐  ┌────────────────┐
+                    │ Spring Boot    │  │ FastAPI        │
+                    │ Main Backend   │  │ AI Chatbot     │
+                    └───────┬────────┘  └───────┬────────┘
+                            │                   │
+                 ┌──────────┼──────────┐        │
+                 │          │          │        │
+                 ▼          ▼          ▼        │
+              MySQL    Cloudinary    Email      │
+                 │          │          │        │
+                 │          │          ▼        │
+                 │          │    .NET Email     │
+                 │          │     Service        │
+                 │          │                   │
+                 └──────────┴───────────────────┘
 ```
 
 ---
 
-### 5. Get Jobs by Industry & Minimum Salary
+# 🧩 Architecture Components
 
-```
-GET /jobs/industry/{industry}/salary/{salary}
+## 1. React Frontend
+
+The frontend provides the user interface for both job seekers and employers.
+
+Technology:
+
+- React.js
+- Vite
+- Redux Toolkit
+- React Router
+- Axios
+- React Icons
+- React Toastify
+- React Markdown
+- Remark GFM
+
+Main frontend pages/components include:
+
+```text
+Home
+Login
+Register
+Jobs
+Dashboard
+PostApplication
+JobPost
+MyJobs
+MyApplications
+MyProfile
+UpdateProfile
+UpdatePassword
+Applications
+ChatBot
 ```
 
 ---
 
-### 6. Update Job Status
+## 2. Node.js API Gateway
 
-```
-PUT /jobs/{companyName}/{title}/status
+The Node.js gateway acts as an intermediary between the React frontend and backend services.
+
+Technology:
+
+- Node.js
+- Express.js
+- Axios
+- Multer
+- Form-Data
+- CORS
+- Morgan
+- dotenv
+
+### Gateway responsibilities
+
+- Receive requests from React
+- Forward JSON requests to Spring Boot
+- Forward multipart/file-upload requests to Spring Boot
+- Forward chatbot requests to FastAPI
+- Forward authorization headers
+- Handle backend responses/errors
+- Provide a single backend entry point for the frontend
+
+### Request routing
+
+```text
+React
+  │
+  ▼
+Node Gateway
+  │
+  ├── /api/* ───────────────► Spring Boot
+  │
+  └── /chat ────────────────► FastAPI
 ```
 
 ---
 
-# ⚙️ How to Run
+# ☕ 3. Spring Boot Backend
 
-### Clone Repository
+The Spring Boot application is the main backend service.
 
-```bash
-git clone https://github.com/your-username/job-portal-management.git
+Technology:
+
+- Java 21
+- Spring Boot 3.5.x
+- Spring Web
+- Spring Data JPA
+- Hibernate
+- Spring Security
+- JWT
+- Bean Validation
+- Spring Actuator
+- Spring Mail
+- Quartz Scheduler
+- Cloudinary
+- OpenCSV
+- Swagger / OpenAPI
+- MySQL
+
+The backend follows a layered architecture:
+
+```text
+Controller
+     ↓
+Service Interface
+     ↓
+Service Implementation
+     ↓
+Repository
+     ↓
+MySQL
 ```
 
 ---
 
-### Configure Database
+# 🔐 Authentication & Authorization
 
-Update `application.properties`
+The application uses:
+
+- Spring Security
+- JWT
+- BCrypt password encoding
+- Role-based authorization
+
+Supported roles:
+
+```text
+JOB_SEEKER
+EMPLOYER
+```
+
+### Authentication flow
+
+```text
+User Login
+    ↓
+AuthController
+    ↓
+AuthenticationManager
+    ↓
+AuthenticationProvider
+    ↓
+UserDetailsService
+    ↓
+Password Verification
+    ↓
+JWT Generated
+    ↓
+JWT returned to Frontend
+```
+
+For protected requests:
+
+```text
+Frontend
+   ↓
+Authorization: Bearer <JWT>
+   ↓
+Node Gateway
+   ↓
+Spring Boot
+   ↓
+JwtAuthenticationFilter
+   ↓
+JWT Validation
+   ↓
+Spring Security
+   ↓
+Controller
+```
+
+Role-based authorization is implemented using Spring Security, including `@PreAuthorize`.
+
+Example:
+
+```java
+@PreAuthorize("hasRole('JOB_SEEKER')")
+```
+
+and:
+
+```java
+@PreAuthorize("hasRole('EMPLOYER')")
+```
+
+---
+
+# 👤 User Management
+
+The user module handles:
+
+- Registration
+- Login
+- Profile
+- Profile update
+- Password change
+- Logout
+- User lookup
+- User roles
+- User niches
+- User resumes
+
+### Registration logic
+
+For a `JOB_SEEKER`:
+
+```text
+Registration
+    ↓
+Validate user details
+    ↓
+Validate 3 niches
+    ↓
+Validate resume
+    ↓
+Encode password using BCrypt
+    ↓
+Upload resume to Cloudinary
+    ↓
+Save user
+    ↓
+Save user niches
+    ↓
+Call Registration Email Service
+    ↓
+Registration completed
+```
+
+For an `EMPLOYER`:
+
+- Resume is not required.
+- Job niches are not required.
+
+---
+
+# 💼 Job Management
+
+The Job Module allows employers to create and manage jobs.
+
+### Employer can:
+
+- Post a job
+- View their own jobs
+- Delete their own jobs
+
+### Public job functionality:
+
+- Get all jobs
+- Get job by ID
+- Search jobs
+- Filter by location
+- Filter by niche
+- Search by keyword
+
+### Job search
+
+The backend supports multiple filters:
+
+```text
+City
+Niche
+Search Keyword
+```
+
+Search can match fields such as:
+
+```text
+Job Title
+Company Name
+Introduction
+Job Type
+```
+
+---
+
+# 📝 Application Management
+
+The Application Module manages the complete job application lifecycle.
+
+### Application APIs
+
+| Method | Endpoint | Description |
+|---|---|---|
+| POST | `/api/applications/post/{jobId}` | Apply for a job |
+| GET | `/api/applications/jobseeker/getall` | Get job seeker's applications |
+| GET | `/api/applications/employer/getall` | Get employer's received applications |
+| DELETE | `/api/applications/delete/{applicationId}` | Delete/hide an application |
+
+---
+
+## Apply-for-Job Flow
+
+```text
+Job Seeker
+    ↓
+Click Apply
+    ↓
+React Application Form
+    ↓
+Node.js Gateway
+    ↓
+ApplicationController
+    ↓
+ApplicationService
+    ↓
+ApplicationServiceImpl
+    ↓
+Validate User
+    ↓
+Check Job
+    ↓
+Check Duplicate Application
+    ↓
+Handle Resume
+    ↓
+Create Application
+    ↓
+ApplicationRepository
+    ↓
+MySQL
+```
+
+### Duplicate application prevention
+
+Before saving an application, the backend checks:
+
+```text
+User ID + Job ID
+```
+
+If the same user has already applied for the same job:
+
+```text
+"You have already applied for this job"
+```
+
+is returned and a duplicate application is not created.
+
+---
+
+# 📄 Resume Management
+
+Resume files are handled using Cloudinary.
+
+### Resume upload flow
+
+```text
+React
+   ↓
+MultipartFile
+   ↓
+Node Gateway
+   ↓
+Spring Boot
+   ↓
+Cloudinary
+   ↓
+Secure URL + Public ID
+   ↓
+MySQL stores resume reference
+```
+
+### Resume validation
+
+The backend validates:
+
+- Resume must not be empty
+- Maximum size: **5 MB**
+- Allowed extensions:
+  - PDF
+  - DOC
+  - DOCX
+
+Cloudinary stores the actual file, while the application stores the file reference such as:
+
+```text
+resumeUrl
+publicId
+```
+
+---
+
+# 🗃️ Database
+
+The application uses **MySQL** with Spring Data JPA/Hibernate.
+
+Important entities include:
+
+```text
+User
+Job
+Application
+UserResume
+UserNiche
+Niche
+JobPersonalWebsite
+ApplicationJobSeekerInfo
+ApplicationJobSeekerResume
+ApplicationEmployerInfo
+ApplicationJobInfo
+ApplicationDeletedBy
+```
+
+### Simplified relationship
+
+```text
+User
+ ├── UserNiche
+ ├── UserResume
+ ├── Job
+ └── Application
+
+Job
+ ├── postedBy → User
+ ├── JobPersonalWebsite
+ └── Application
+
+Application
+ ├── JobSeekerInfo
+ ├── JobSeekerResume
+ ├── EmployerInfo
+ ├── JobInfo
+ └── DeletedBy
+
+Niche
+ └── UserNiche
+```
+
+---
+
+# 🧑‍💻 Application Deletion / Visibility
+
+Application deletion is role-aware.
+
+### Job seeker
+
+If the logged-in job seeker owns the application:
+
+```text
+Application is deleted
+```
+
+### Employer
+
+If the employer removes an application from their view:
+
+```text
+deletedBy.employer = true
+```
+
+This allows the application to remain available in the system while being hidden from the employer.
+
+Authorization checks are performed before deletion so users cannot modify applications that do not belong to them.
+
+---
+
+# 📬 Email Services
+
+The project uses two email-related mechanisms.
+
+## Spring Boot Email
+
+Spring Boot uses `JavaMailSender` for automated job notification emails.
+
+The newsletter scheduler sends matching job notifications to users.
+
+## Registration Email Microservice
+
+A separate .NET service handles registration confirmation emails.
+
+Technology:
+
+- ASP.NET Core
+- .NET 10
+- MailKit
+- SMTP
+
+Endpoint:
+
+```text
+POST /api/registration-email/send
+```
+
+### Registration email flow
+
+```text
+React
+   ↓
+Spring Boot Registration
+   ↓
+User saved successfully
+   ↓
+RegistrationEmailClient
+   ↓
+.NET Email Service
+   ↓
+MailKit
+   ↓
+SMTP
+   ↓
+User's Email
+```
+
+---
+
+# 🤖 Chatbot Architecture
+
+The chatbot is implemented as a separate FastAPI service.
+
+```text
+React Chatbot
+      ↓
+Node Gateway
+      ↓
+FastAPI
+      ↓
+JobService
+      ↓
+Spring Boot / Jobs API
+      ↓
+Job Data
+      ↓
+Groq LLM
+      ↓
+Chat Response
+      ↓
+React
+```
+
+### Chatbot components
+
+```text
+chatbot/
+├── app.py
+├── requirements.txt
+├── models/
+│   └── chat_model.py
+├── routes/
+│   └── chat.py
+└── services/
+    ├── ai_service.py
+    ├── job_service.py
+    └── response_service.py
+```
+
+---
+
+# ⏰ Automation
+
+The Spring Boot project uses scheduled processing.
+
+Current scheduler:
+
+```java
+@Scheduled(cron = "0 */1 * * * *")
+```
+
+The scheduler:
+
+1. Finds jobs where newsletter has not been sent.
+2. Gets users whose niches match the job niche.
+3. Sends an email to each matching user.
+4. Marks the job as processed.
+
+Simplified logic:
+
+```text
+New Job
+   ↓
+newslettersSent = false
+   ↓
+Scheduler
+   ↓
+Find matching users
+   ↓
+Send email
+   ↓
+newslettersSent = true
+```
+
+---
+
+# 📡 Main API Endpoints
+
+## Authentication
+
+```text
+POST /api/auth/register
+POST /api/auth/register-json
+POST /api/auth/login
+```
+
+## Users
+
+```text
+GET  /api/users/profile
+PUT  /api/users/profile
+PUT  /api/users/change-password
+POST /api/users/logout
+GET  /api/users
+GET  /api/users/{id}
+```
+
+## Jobs
+
+```text
+POST   /api/jobs/post
+GET    /api/jobs/getall
+GET    /api/jobs/get/{id}
+GET    /api/jobs/getmyjobs
+DELETE /api/jobs/delete/{id}
+```
+
+## Applications
+
+```text
+POST   /api/applications/post/{jobId}
+GET    /api/applications/jobseeker/getall
+GET    /api/applications/employer/getall
+DELETE /api/applications/delete/{applicationId}
+```
+
+## Chatbot
+
+```text
+POST /chat
+```
+
+## Registration Email Service
+
+```text
+POST /api/registration-email/send
+```
+
+---
+
+# 📁 Repository Structure
+
+The project is organized into separate services.
+
+```text
+NicheNest/
+│
+├── frontend/
+│   ├── public/
+│   ├── src/
+│   │   ├── components/
+│   │   ├── pages/
+│   │   ├── store/
+│   │   │   └── slices/
+│   │   ├── App.jsx
+│   │   └── main.jsx
+│   ├── package.json
+│   └── vite.config.js
+│
+├── gateway/
+│   ├── config/
+│   ├── middleware/
+│   ├── routes/
+│   │   ├── chatbot.js
+│   │   ├── springJson.js
+│   │   └── springUpload.js
+│   ├── utils/
+│   ├── server.js
+│   └── package.json
+│
+├── spring_boot_backend_template/
+│   ├── src/
+│   │   ├── main/
+│   │   │   ├── java/com/backend/
+│   │   │   │   ├── automation/
+│   │   │   │   ├── config/
+│   │   │   │   ├── controller/
+│   │   │   │   ├── dto/
+│   │   │   │   ├── entities/
+│   │   │   │   ├── exception/
+│   │   │   │   ├── repository/
+│   │   │   │   ├── security/
+│   │   │   │   └── service/
+│   │   │   └── resources/
+│   │   └── test/
+│   └── pom.xml
+│
+├── chatbot/
+│   ├── models/
+│   ├── routes/
+│   ├── services/
+│   ├── app.py
+│   └── requirements.txt
+│
+└── RegistrationEmailService/
+    ├── Controllers/
+    ├── DTOs/
+    ├── Services/
+    ├── Program.cs
+    ├── appsettings.json
+    └── RegistrationEmailService.csproj
+```
+
+---
+
+# 🛠️ Technology Stack
+
+## Frontend
+
+- React.js 18
+- Vite
+- Redux Toolkit
+- React Router
+- Axios
+- React Icons
+- React Toastify
+- React Markdown
+
+## Backend
+
+- Java 21
+- Spring Boot
+- Spring MVC
+- Spring Data JPA
+- Hibernate
+- Spring Security
+- JWT
+- Bean Validation
+- Spring Actuator
+- Quartz Scheduler
+- Spring Mail
+- Swagger/OpenAPI
+
+## Gateway
+
+- Node.js
+- Express.js
+- Axios
+- Multer
+- Form-Data
+- CORS
+- Morgan
+- dotenv
+
+## Chatbot
+
+- Python
+- FastAPI
+- Groq
+- Llama 3.3 70B Versatile
+- Requests
+- Pydantic
+- python-dotenv
+
+## Email Microservice
+
+- ASP.NET Core
+- .NET 10
+- MailKit
+- SMTP
+
+## Database & Storage
+
+- MySQL
+- Cloudinary
+
+## Development Tools
+
+- Git
+- GitHub
+- Maven
+- npm
+- Postman
+- VS Code / Eclipse / IntelliJ
+- Visual Studio
+
+---
+
+# 🚀 Local Setup
+
+## Prerequisites
+
+Install:
+
+```text
+Java 21
+Node.js
+npm
+Python 3.x
+MySQL
+.NET 10 SDK
+Git
+```
+
+---
+
+## 1. Clone the repositories
+
+Clone the frontend, gateway, Spring Boot backend, chatbot, and email service repositories.
+
+---
+
+## 2. Configure MySQL
+
+Create the required database.
+
+Then configure Spring Boot with your local database:
 
 ```properties
-spring.datasource.url=jdbc:mysql://localhost:3306/job_portal
-spring.datasource.username=root
+spring.datasource.url=jdbc:mysql://localhost:3306/your_database
+spring.datasource.username=your_username
 spring.datasource.password=your_password
-
-spring.jpa.hibernate.ddl-auto=update
 ```
 
 ---
 
-### Run Application
+## 3. Configure Spring Boot
+
+Add your required environment/configuration values for:
+
+```text
+Database
+JWT
+Cloudinary
+SMTP
+Registration Email Service
+```
+
+---
+
+## 4. Start Spring Boot
+
+From the backend:
 
 ```bash
-mvn spring-boot:run
+./mvnw spring-boot:run
 ```
 
-or run `Application.java` from your IDE.
+Windows:
+
+```bash
+mvnw.cmd spring-boot:run
+```
 
 ---
 
-# 🧪 API Testing
+## 5. Start Node Gateway
 
-You can test all REST APIs using:
-
-* Postman
-* Swagger (if added)
-
----
-
-# 📚 Spring Boot Concepts Used
-
-* REST API Development
-* Spring Boot
-* Spring Data JPA
-* Hibernate ORM
-* Entity Relationships (`@ManyToOne`)
-* DTO Pattern
-* ModelMapper
-* Layered Architecture
-* Exception Handling
-* Transactions (`@Transactional`)
-* Hibernate Dirty Checking
-* JPQL & Derived Query Methods
-* ResponseEntity
-* Lombok
+```bash
+cd gateway
+npm install
+npm start
+```
 
 ---
 
-# 🎯 Learning Outcome
+## 6. Start FastAPI Chatbot
 
-This project demonstrates:
-
-* Building RESTful APIs using Spring Boot
-* Database operations using Spring Data JPA
-* Entity relationship mapping
-* DTO-based response handling
-* Exception handling
-* CRUD operations
-* Repository query methods
-* JPQL queries
-* Layered Architecture (Controller → Service → Repository)
+```bash
+cd chatbot
+pip install -r requirements.txt
+uvicorn app:app --reload
+```
 
 ---
 
-# 👨‍💻 Author
+## 7. Start Frontend
+
+```bash
+cd frontend
+npm install
+npm run dev
+```
+
+Vite normally starts the frontend at:
+
+```text
+http://localhost:5173
+```
+
+---
+
+## 8. Start Registration Email Service
+
+From the .NET project:
+
+```bash
+dotnet restore
+dotnet run
+```
+
+Configure SMTP settings before testing registration emails.
+
+---
+
+# 🔧 Environment Variables
+
+Never commit real credentials to GitHub.
+
+Use environment variables for:
+
+```text
+MYSQLHOST
+MYSQLPORT
+MYSQLDATABASE
+MYSQLUSER
+MYSQLPASSWORD
+
+JWT_SECRET
+
+CLOUDINARY_CLOUD_NAME
+CLOUDINARY_API_KEY
+CLOUDINARY_API_SECRET
+
+MAIL_USERNAME
+MAIL_PASSWORD
+
+GROQ_API_KEY
+
+SPRING_BOOT_URL
+FASTAPI_URL
+DOTNET_URL
+FRONTEND_URL
+
+REGISTRATION_EMAIL_SERVICE_URL
+```
+
+Create an `.env.example` file containing variable names only.
+
+Example:
+
+```env
+GROQ_API_KEY=
+
+SPRING_BOOT_URL=
+FASTAPI_URL=
+DOTNET_URL=
+FRONTEND_URL=
+
+MYSQLHOST=
+MYSQLPORT=
+MYSQLDATABASE=
+MYSQLUSER=
+MYSQLPASSWORD=
+
+JWT_SECRET=
+
+CLOUDINARY_CLOUD_NAME=
+CLOUDINARY_API_KEY=
+CLOUDINARY_API_SECRET=
+
+MAIL_USERNAME=
+MAIL_PASSWORD=
+
+REGISTRATION_EMAIL_SERVICE_URL=
+```
+
+---
+
+# 🌐 Deployment Architecture
+
+A possible production deployment is:
+
+```text
+React
+  ↓
+Vercel
+
+Node Gateway
+  ↓
+Railway / Render
+
+Spring Boot
+  ↓
+Railway / Render
+
+MySQL
+  ↓
+Railway / Managed MySQL
+
+FastAPI Chatbot
+  ↓
+Render / Railway
+
+.NET Email Service
+  ↓
+.NET-compatible cloud hosting
+
+Cloudinary
+  ↓
+Cloud file storage
+```
+
+For production, replace all `localhost` URLs with environment-based service URLs.
+
+---
+
+# 🧪 Testing
+
+Recommended testing flow:
+
+### Authentication
+
+```text
+Register
+   ↓
+Registration email
+   ↓
+Login
+   ↓
+JWT received
+```
+
+### Job flow
+
+```text
+Employer Login
+   ↓
+Post Job
+   ↓
+Job visible in Job Seeker job list
+```
+
+### Application flow
+
+```text
+Job Seeker Login
+   ↓
+Search Job
+   ↓
+Open Job
+   ↓
+Apply
+   ↓
+Resume Upload
+   ↓
+Application saved
+```
+
+### Duplicate application
+
+```text
+Apply once
+   ↓
+Success
+
+Apply same job again
+   ↓
+Duplicate validation
+   ↓
+Error message
+```
+
+### Automation
+
+```text
+Create job
+   ↓
+Matching niche
+   ↓
+Scheduler
+   ↓
+Email notification
+```
+
+### Chatbot
+
+```text
+Open chatbot
+   ↓
+Ask job-related question
+   ↓
+Gateway
+   ↓
+FastAPI
+   ↓
+Job data + LLM
+   ↓
+Response
+```
+
+---
+
+# 🔒 Security Considerations
+
+The application uses:
+
+- JWT authentication
+- BCrypt password hashing
+- Role-based authorization
+- Spring Security
+- Ownership checks before sensitive operations
+- Resume file type validation
+- Resume size validation
+- Environment variables for secrets
+
+### Important
+
+Do not commit:
+
+```text
+.env
+Passwords
+API keys
+JWT secrets
+SMTP passwords
+Cloudinary secrets
+```
+
+If a real credential has already been pushed to GitHub, revoke/rotate it before making the repository public.
+
+---
+
+# 📚 What This Project Demonstrates
+
+This project demonstrates practical experience with:
+
+- Full-stack application development
+- React.js
+- Redux Toolkit
+- REST API development
+- Spring Boot
+- Spring Data JPA
+- Hibernate
+- MySQL
+- Spring Security
+- JWT authentication
+- Role-based authorization
+- Node.js API Gateway
+- Microservice-style architecture
+- Python FastAPI
+- LLM integration
+- Groq API
+- Cloudinary
+- SMTP email
+- .NET microservice
+- Scheduled automation
+- File upload handling
+- Multipart requests
+- JPQL queries
+- DTO-based API design
+- Exception handling
+- Git/GitHub collaboration
+
+---
+
+# 👥 Team Contributions
+
+The project was developed as a team project with different modules divided among team members.
+
+Typical major modules include:
+
+```text
+Authentication / User Module
+        ↓
+Job Module
+        ↓
+Application Module
+        ↓
+Automation / Notification
+        ↓
+Chatbot
+        ↓
+Frontend Integration
+        ↓
+API Gateway
+```
+
+Individual responsibilities should be described according to the module actually implemented by each team member.
+
+---
+
+# 👨‍💻 My Contribution
+
+My primary contributions were:
+
+### Frontend — Job Module
+
+- Job listing
+- Job searching
+- Job filtering
+- Job details
+- Job application flow
+- Job-related Redux state management
+
+### Backend — Application Module
+
+- Application Controller
+- Application Service
+- Application Service Implementation
+- Application Repository
+- Apply-for-job API
+- Duplicate application validation
+- Job seeker application listing
+- Employer application listing
+- Application authorization
+- Application deletion/hiding
+- Resume handling through Cloudinary
+
+I also worked with the project's integration flow involving:
+
+```text
+React
+   ↓
+Node Gateway
+   ↓
+Spring Boot
+   ↓
+MySQL / Cloudinary
+```
+
+---
+
+# 🎯 Interview Explanation
+
+A short explanation of the complete project:
+
+> **NicheNest is a full-stack Job Portal with Automation that connects job seekers and employers on a single platform. Job seekers can search, filter, and apply for jobs, while employers can post jobs and manage applications. We used React for the frontend, Node.js and Express as an API gateway, Spring Boot with Spring Data JPA for the main backend, MySQL for the database, Cloudinary for resume storage, FastAPI and Groq for the AI chatbot, and a .NET email microservice for registration emails. The project also contains an automated job notification system that matches newly posted jobs with users' selected niches and sends email notifications.**
+
+---
+
+# ⭐ Future Improvements
+
+Possible future enhancements:
+
+- Advanced recommendation engine
+- Elasticsearch-based job search
+- Real-time chat between employer and candidate
+- Application status tracking
+- Interview scheduling
+- Push notifications
+- Admin dashboard
+- Docker-based deployment
+- CI/CD pipeline
+- Centralized logging
+- Redis caching
+- Rate limiting
+- Automated tests
+- Production monitoring
+
+---
+
+# 📄 License
+
+This project is developed for educational, portfolio, and placement purposes.
+
+---
+
+# 👤 Author
 
 **Ajay Pal**
 
-If you found this project helpful, feel free to ⭐ the repository.
+B.Tech — Computer Science & Engineering
+
+**Project:** NicheNest — Job Portal with Automation
