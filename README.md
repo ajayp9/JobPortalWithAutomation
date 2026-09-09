@@ -1325,56 +1325,7 @@ API Gateway
 
 Individual responsibilities should be described according to the module actually implemented by each team member.
 
----
 
-# 👨‍💻 My Contribution
-
-My primary contributions were:
-
-### Frontend — Job Module
-
-- Job listing
-- Job searching
-- Job filtering
-- Job details
-- Job application flow
-- Job-related Redux state management
-
-### Backend — Application Module
-
-- Application Controller
-- Application Service
-- Application Service Implementation
-- Application Repository
-- Apply-for-job API
-- Duplicate application validation
-- Job seeker application listing
-- Employer application listing
-- Application authorization
-- Application deletion/hiding
-- Resume handling through Cloudinary
-
-I also worked with the project's integration flow involving:
-
-```text
-React
-   ↓
-Node Gateway
-   ↓
-Spring Boot
-   ↓
-MySQL / Cloudinary
-```
-
----
-
-# 🎯 Interview Explanation
-
-A short explanation of the complete project:
-
-> **NicheNest is a full-stack Job Portal with Automation that connects job seekers and employers on a single platform. Job seekers can search, filter, and apply for jobs, while employers can post jobs and manage applications. We used React for the frontend, Node.js and Express as an API gateway, Spring Boot with Spring Data JPA for the main backend, MySQL for the database, Cloudinary for resume storage, FastAPI and Groq for the AI chatbot, and a .NET email microservice for registration emails. The project also contains an automated job notification system that matches newly posted jobs with users' selected niches and sends email notifications.**
-
----
 
 # ⭐ Future Improvements
 
