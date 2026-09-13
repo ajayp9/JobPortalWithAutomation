@@ -1301,29 +1301,7 @@ This project demonstrates practical experience with:
 
 ---
 
-# 👥 Team Contributions
 
-The project was developed as a team project with different modules divided among team members.
-
-Typical major modules include:
-
-```text
-Authentication / User Module
-        ↓
-Job Module
-        ↓
-Application Module
-        ↓
-Automation / Notification
-        ↓
-Chatbot
-        ↓
-Frontend Integration
-        ↓
-API Gateway
-```
-
-Individual responsibilities should be described according to the module actually implemented by each team member.
 
 
 
